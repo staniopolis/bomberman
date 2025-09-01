@@ -23,6 +23,8 @@ describe('Collision', () => {
     expect(pass(0,0)).toBe(false); // solid
     expect(pass(2,1)).toBe(false); // breakable
     expect(pass(1,1)).toBe(true); // player tile empty initially
+    expect(pass(-1,1)).toBe(false); // out of bounds left
+    expect(pass(5,1)).toBe(false); // out of bounds right
     const player = game.world.query('player')[0];
     game.placeBomb(player);
     expect(pass(1,1)).toBe(false); // bomb blocks
