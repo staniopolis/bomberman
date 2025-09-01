@@ -155,7 +155,7 @@ export class Game {
         const pos = this.world.get<Position>('pos')[id];
         const nx = pos.x + vel.x*player.speed*dt;
         const ny = pos.y + vel.y*player.speed*dt;
-        if (this.isPassable(nx, ny)) { pos.x = nx; pos.y = ny; }
+        if (this.isPassable(nx, ny, id)) { pos.x = nx; pos.y = ny; }
       }
       if (this.input.bomb) { this.placeBomb(id); this.input.bomb=false; }
     }
@@ -185,7 +185,7 @@ export class Game {
       else { if (Math.random()<0.02) { vel.x = [-1,0,1][Math.floor(Math.random()*3)]; vel.y = [-1,0,1][Math.floor(Math.random()*3)]; } }
       const nx = pos.x + vel.x*enemy.speed*dt;
       const ny = pos.y + vel.y*enemy.speed*dt;
-      if (this.isPassable(nx, ny)) pos.x = nx, pos.y = ny;
+      if (this.isPassable(nx, ny, id)) pos.x = nx, pos.y = ny;
       // check collision with player
       const ppos = this.world.get<Position>('pos')[players[0]];
       if (Math.abs(ppos.x-pos.x)<0.5 && Math.abs(ppos.y-pos.y)<0.5) this.lose();
@@ -218,19 +218,27 @@ export class Game {
     this.button('Title',()=>this.showTitle());
   }
 
-  private isPassable(x: number, y: number): boolean {
-    const tx=Math.floor(x), ty=Math.floor(y);
+  private isPassable(x: number, y: number, entity?: Entity): boolean {
+    const tx = Math.floor(x), ty = Math.floor(y);
+    if (tx < 0 || ty < 0 || tx >= this.level.width || ty >= this.level.height) return false;
     const char = this.level.tiles[ty][tx];
-    if (charToTile(char)==='solid') return false;
+    if (charToTile(char) === 'solid') return false;
     const breakables = this.world.query('breakable','pos');
     for (const id of breakables) {
       const p = this.world.get<Position>('pos')[id];
-      if (p.x===tx && p.y===ty) return false;
+      if (p.x === tx && p.y === ty) return false;
     }
     const bombs = this.world.query('bomb','pos');
     for (const id of bombs) {
-      const p=this.world.get<Position>('pos')[id];
-      if (Math.round(x)===p.x && Math.round(y)===p.y) return false;
+      const p = this.world.get<Position>('pos')[id];
+      if (Math.floor(x) === p.x && Math.floor(y) === p.y) {
+        const b = this.world.get<Bomb>('bomb')[id];
+        if (entity === b.owner) {
+          const ownerPos = this.world.get<Position>('pos')[b.owner];
+          if (Math.floor(ownerPos.x) === p.x && Math.floor(ownerPos.y) === p.y) continue;
+        }
+        return false;
+      }
     }
     return true;
   }

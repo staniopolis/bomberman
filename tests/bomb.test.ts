@@ -19,4 +19,15 @@ describe('Bomb', () => {
     game.update(BOMB_TIME + 0.1);
     expect(game.world.get('bomb')[id]).toBeUndefined();
   });
+
+  it('allows player to move after placing', () => {
+    const game = setup();
+    const player = game.world.query('player')[0];
+    game.placeBomb(player);
+    (game as any).input.right = true;
+    game.update(0.2);
+    (game as any).input.right = false;
+    const pos = game.world.get('pos')[player];
+    expect(pos.x).toBeGreaterThan(1);
+  });
 });
